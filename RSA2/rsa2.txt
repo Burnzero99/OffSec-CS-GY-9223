@@ -1,0 +1,47 @@
+import gmpy2
+C2 = 'c from ciphertest2'
+
+n = 'n from either ciper, both are same'
+
+C1 = "your c from ciphertext1"
+
+class RSAModuli:
+	def __init__(self):
+		self.a = 0
+		self.b = 0
+		self.m = 0
+		self.i = 0
+	def gcd(self, num1, num2):
+		if num1 < num2:
+			num1, num2 = num2, num1
+		while num2 != 0:
+			num1, num2 = num2, num1 % num2
+		return num1
+	def extended_euclidean(self, e1, e2):
+		self.a = gmpy2.invert(e1, e2)
+		self.b = (float(self.gcd(e1, e2)-(self.a*e1)))/float(e2)
+	def modular_inverse(self, c1, c2, N):
+		i = gmpy2.invert(c2, N)
+		mx = pow(c1, self.a, N)
+		my = pow(i, int(-self.b), N)
+		self.m= mx * my % N
+	def print_value(self):
+		return self.m
+   
+   
+def main():
+	c = RSAModuli()
+	N  = n
+	c1 = C1
+	c2 = C2
+	e1 = 257
+	e2 = 65537
+	c.extended_euclidean(e1, e2)
+	c.modular_inverse(c1, c2, N)
+	message = c.print_value()
+	message = hex(message)[2:]
+	message = bytes.fromhex(message)
+	print(message.decode())
+    
+if __name__ == '__main__':
+	main()
