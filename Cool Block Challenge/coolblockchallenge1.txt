@@ -1,0 +1,64 @@
+from pwn import *
+iv = 'number'
+enc= 'number given'
+iv = bytes.fromhex(iv)
+enc = iv + enc
+known = '''t more, but you'll have to go read it for yourself.\n\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c'''
+IDX = len(known) // 16 +1
+IDX = 56
+result = []
+def do_pad(ppp):
+    global result,enc
+    res = b''
+    for x in range(len(result)):
+        res= (result[x]^enc[-1-x-IDX*16] ^ ppp).to_bytes(1,'little') + res
+    return res
+def atk(pos,value):
+    p = remote(url,port)
+    p.sendlineafter(": ",b'xm2146')
+    cur = IDX * 16 
+    padding = do_pad(pos+1)
+    tmp = enc[:-cur-1-pos]+value.to_bytes(1,'little') + padding+enc[-cur:-cur+0x10]
+    p.sendlineafter(": ",tmp.hex())
+    data = p.read()
+    
+    if b"a valid message" in data:
+        p.close()
+        return 1
+    p.close()
+    return 0
+
+def tra(l):
+    res=""
+    for x in l:
+        res = chr(x)+res
+    return res
+def CBC():
+    flag=[]
+    for _ in range(len(enc)//16):
+        t = len(result)
+        for y in range(t,0x10):
+            orginal = enc[-1-y-IDX*16]
+            #print(f'ori:{orginal}')
+            find = 0
+            for x in range(0x100):
+                #print(f"TRYING {y} {x}")
+                if y==0 and x == orginal:
+                    continue
+                if atk(y,x):
+                    print(f"Position: {y} Value: --> {(y+1)^x^orginal}")
+                    result.append((y+1)^x^orginal)
+                    print(tra(result))
+                    find = 1
+                    break
+            if not find:
+                print("PANIC")
+                exit(1)
+        flag.append(tra(result))
+        result = []
+        print("="*0x20)
+        for __ in flag:
+            print("***"+__+"***")
+        print("="*0x20)
+        IDX+=1
+if __name__ == "__main__":
