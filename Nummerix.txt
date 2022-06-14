@@ -1,0 +1,14 @@
+from pwn import *
+context.log_level='debug'
+p=process("./re")
+p=remote("offsec-chalbroker.osiris.cyber.nyu.edu",)
+sa = p.sendlineafter
+sa(":","netid")
+sa("?\n","3735928559")
+sa("?\n","1337")
+sa("?\n",str(0xC0DEF001337BEEF))
+sa("!\n",str(3503354048))
+p.interactive()
+
+
+Skelton Code
