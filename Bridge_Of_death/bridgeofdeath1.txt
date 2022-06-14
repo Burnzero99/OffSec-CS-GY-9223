@@ -1,0 +1,32 @@
+from pwn import *
+p = None
+context.log_level='debug'
+context.arch='amd64'
+context.terminal=['tmux','split','-h']
+#p=process("./re")
+p=remote("offsec-chalbroker.osiris.cyber.nyu.edu",8005)
+
+sa = p.sendlineafter
+#gdb.attach(p,'b *0x5555555554C7 ')
+sa(":",'net_id')
+sa("?\n",b"My name is Sir Lancelot of Camelot.")
+sa("?\n",b'10')
+p.sendline(b"10")
+
+def xxx(offset):
+    h = offset>>8
+    l = offset %0x100
+    p.sendline(str(h).encode())
+    p.sendline(str(l).encode())
+l = [0x1699,1,0x1a6d,1,0x166,1,0x37f6,1,0xb97,1,0x2200,1,0xffc,1,0x18ed,1,0x22f9,1,0x1c1c]
+xxx(sum(l[:5]))
+xxx(sum(l[:-2]))
+xxx(sum(l[:-4]))
+xxx(sum(l[:7]))
+xxx(sum(l[:11]))
+xxx(sum(l[:3]))
+xxx(sum(l[:13]))
+xxx(sum(l[:1]))
+xxx(sum(l[:9]))
+
+p.interactive()
