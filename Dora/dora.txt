@@ -1,0 +1,13 @@
+from pwn import *
+p = None
+context.log_level='debug'
+context.arch='amd64'
+context.terminal=['tmux','split','-h']
+for x in range(1):
+    #p=process("./dora")
+    p=remote("offsec-chalbroker.osiris.cyber.nyu.edu",1250)
+    sa = p.sendlineafter
+    #gdb.attach(p,'b *0x5555555554C7 ')
+    sa(":",'xm2146')
+    sa("?\n",str("124").encode())
+    p.interactive()
