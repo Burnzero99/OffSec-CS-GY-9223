@@ -1,0 +1,14 @@
+from Crypto.Util.number import *
+import gmpy2
+
+n = number
+e = 5
+
+cipher = number
+
+# e is very small
+# m ** e < n
+
+m = gmpy2.iroot(cipher, e)[0]
+
+print(long_to_bytes(m))
